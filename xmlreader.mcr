@@ -248,7 +248,7 @@ fn saveOriginalPositions xmlData roomIndex =
         if sceneObj != undefined then
         (
             sceneObj.position = objPos
-            append roomOriginalPositions sceneObj.position
+            append roomOriginalPositions #(sceneObj.name, sceneObj.position)
         )
     )
 
@@ -266,9 +266,11 @@ fn saveOriginalPositions xmlData roomIndex =
 
 
 
-
 fn restoreOriginalPositions originalPositionsList =
 (
+    print "restoreOriginalPositions called with:"
+    print originalPositionsList
+
     if originalPositionsList != undefined then (
         for originalPos in originalPositionsList where isKindOf originalPos Array do
         (
@@ -298,6 +300,7 @@ fn findRoomIndex list roomIndex =
             return i
         )
     )
+    format "Ошибка: не найдено сохраненных позиций для комнаты %\n" roomIndex
     return 0
 )
 
@@ -310,7 +313,9 @@ on importButton pressed do (
 
         -- Проверяем, есть ли уже сохраненные позиции для данной комнаты
         if findRoomIndex originalPositionList roomIndex == 0 do (
-            append originalPositionList (saveOriginalPositions xmlData roomIndex)
+            local savedPositions = saveOriginalPositions xmlData roomIndex
+            format "Сохраненные позиции для комнаты %: %\n" roomIndex savedPositions
+            append originalPositionList #(roomIndex, savedPositions)  -- добавляем индекс комнаты
         )
 
         updateSceneObjects xmlData roomIndex
@@ -325,6 +330,8 @@ on importButton pressed do (
 )
 
 
+
+
 on restoreButton pressed do (
     local roomIndex = ObjectPlacer.roomDropdown.selection
     format "roomIndex: %\n" roomIndex
@@ -336,6 +343,8 @@ on restoreButton pressed do (
         local roomOriginalPositions = originalPositionList[roomIndexInList][2]
         format "roomOriginalPositions: %\n" roomOriginalPositions
         
+        print "Calling restoreOriginalPositions with:"
+        print roomOriginalPositions
         restoreOriginalPositions roomOriginalPositions
 
         -- Error handling for restoreButton
