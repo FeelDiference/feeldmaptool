@@ -21,31 +21,6 @@ fn trimString str =
     )
     else ""
 )
-fn readEntityNode entityNode = (
-    local objectName = (entityNode.SelectSingleNode("archetypeName")).InnerText
-    local positionNode = entityNode.SelectSingleNode("position")
-    local positionX = (positionNode.GetAttribute("x") as float)
-    local positionY = (positionNode.GetAttribute("y") as float)
-    local positionZ = (positionNode.GetAttribute("z") as float)
-    local rotationNode = entityNode.SelectSingleNode("rotation")
-    local rotationX = (rotationNode.GetAttribute("x") as float)
-    local rotationY = (rotationNode.GetAttribute("y") as float)
-    local rotationZ = (rotationNode.GetAttribute("z") as float)
-    local rotationW = (rotationNode.GetAttribute("w") as float)
-    local quaternion = quat 0 0 0 1 -- Создаем пустой кватернион
-    quaternion.x = rotationX
-    quaternion.y = rotationY
-    quaternion.z = rotationZ
-    quaternion.w = rotationW
-    if quaternion != undefined then (
-        local rotation = quaternionToEulerAngles quaternion
-        local objectData = #(objectName, [positionX, positionY, positionZ], rotation)
-        return objectData
-    ) else (
-        format "Quaternion is undefined for object %.\n" objectName
-        return undefined
-    )
-)
 fn readRoomData xmlFile = (
     local xmlDoc = dotNetObject "System.Xml.XmlDocument"
     xmlDoc.load xmlFile
@@ -78,6 +53,7 @@ fn readRoomData xmlFile = (
     -- Возвращаем имена комнат и список индексов объектов для каждой комнаты
     #(roomNames, objectIndexesList)
 )
+
 -- Создаем функцию для открытия диалогового окна выбора файла
 fn getXMLFile = (
     -- Создаем диалоговое окно для выбора файла
