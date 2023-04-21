@@ -104,8 +104,6 @@ fn readXMLData xmlFile = (
 fn updateSceneObjects objectDataList roomIndex = (
     -- Получаем список индексов объектов для выбранной комнаты
     local indexes = objectIndexes[roomIndex]
-    print "Список индексов объектов:"
-    print indexes
     -- Перебираем все объекты в списке данных объектов и обновляем только те, которые есть в списке индексов
     with redraw off (
         for i = 1 to indexes.count do (
@@ -130,15 +128,14 @@ fn updateSceneObjects objectDataList roomIndex = (
                         print objectName
                         print "Новые координаты:"
                         print newPosition
-                        format "Объект % обновлен на координаты: %\n" objectName obj.pos
                     ) else (
-                        format "Объект % найден в сцене, но скрыт.\n" objectName
+                        format ""
                     )
                 ) else (
-                    format "Объект % не найден в сцене.\n" objectName.count
+                    format "" 
                 )
             ) else (
-                format "Индекс объекта % вне диапазона.\n" objectIndex
+                format "" 
             )
         )
     )
@@ -254,7 +251,8 @@ fn saveOriginalPositions xmlData roomIndex =
     if roomIndex > 0 and roomIndex <= roomOriginalPositions.count then
     (
         local roomIndexInList = roomIndex - 1
-        roomOriginalPositions[roomIndex]
+        format "Сохранены позиции объектов для комнаты %: %\n" roomIndex roomOriginalPositions -- добавлено для вывода информации
+        roomOriginalPositions
     )
     else
     (
@@ -262,7 +260,6 @@ fn saveOriginalPositions xmlData roomIndex =
         undefined
     )
 )
-
 
 
 fn restoreOriginalPositions originalPositionsList =
@@ -296,9 +293,9 @@ fn findRoomIndex list roomIndex =
             return i
         )
     )
-    format "Ошибка: не найдено сохраненных позиций для комнаты %\n" roomIndex
     return 0
 )
+
 
 
 
@@ -306,8 +303,12 @@ on importButton pressed do (
     if xmlData != undefined do (
         local roomIndex = ObjectPlacer.roomDropdown.selection
 
-        if findRoomIndex originalPositionList roomIndex == 0 do (
-            append originalPositionList (saveOriginalPositions xmlData roomIndex)
+        local roomIndexInList = findRoomIndex originalPositionList roomIndex
+        if roomIndexInList == 0 do (
+            local savedPositions = saveOriginalPositions xmlData roomIndex
+            append originalPositionList #(roomIndex, savedPositions)
+            format "Сохраненные позиции объектов в списке: %\n" originalPositionList
+            roomIndexInList = findRoomIndex originalPositionList roomIndex -- добавлено для обновления индекса комнаты в списке
         )
 
         updateSceneObjects xmlData roomIndex
@@ -317,17 +318,19 @@ on importButton pressed do (
 
 
 
-
 on restoreButton pressed do (
     local roomIndex = ObjectPlacer.roomDropdown.selection
     local roomIndexInList = findRoomIndex originalPositionList roomIndex
 
     if roomIndexInList > 0 do (
         local roomOriginalPositions = originalPositionList[roomIndexInList][2]
+        format "Восстановление позиций объектов для комнаты %: %\n" roomIndex roomOriginalPositions -- добавлено для вывода информации
         restoreOriginalPositions roomOriginalPositions
         restoreButton.enabled = false
     )
 )
+
+
 
 
 
