@@ -247,7 +247,6 @@ fn saveOriginalPositions xmlData roomIndex =
         local sceneObj = getNodeByName objName
         if sceneObj != undefined then
         (
-            sceneObj.position = objPos
             append roomOriginalPositions #(sceneObj.name, sceneObj.position)
         )
     )
@@ -268,22 +267,19 @@ fn saveOriginalPositions xmlData roomIndex =
 
 fn restoreOriginalPositions originalPositionsList =
 (
-    print "restoreOriginalPositions called with:"
-    print originalPositionsList
-
     if originalPositionsList != undefined then (
-        for originalPos in originalPositionsList where isKindOf originalPos Array do
+        for originalPos in originalPositionsList do
         (
             local objName = originalPos[1]
             local objPos = originalPos[2]
             local sceneObj = getNodeByName objName
             if sceneObj != undefined do (
-                local objPosArray = execute ("#(" + objPos + ")")
-                sceneObj.pos = objPosArray[1]
+                sceneObj.pos = objPos
             )
         )
     )
 )
+
 
 
 
@@ -306,26 +302,16 @@ fn findRoomIndex list roomIndex =
 
 
 
-
 on importButton pressed do (
     if xmlData != undefined do (
         local roomIndex = ObjectPlacer.roomDropdown.selection
 
-        -- Проверяем, есть ли уже сохраненные позиции для данной комнаты
         if findRoomIndex originalPositionList roomIndex == 0 do (
-            local savedPositions = saveOriginalPositions xmlData roomIndex
-            format "Сохраненные позиции для комнаты %: %\n" roomIndex savedPositions
-            append originalPositionList #(roomIndex, savedPositions)  -- добавляем индекс комнаты
+            append originalPositionList (saveOriginalPositions xmlData roomIndex)
         )
 
         updateSceneObjects xmlData roomIndex
-
-        -- Error handling for restoreButton
-        if isKindOf restoreButton RolloutControl then (
-            restoreButton.enabled = true
-        ) else (
-            format "Error: restoreButton is not a valid RolloutControl.\n"
-        )
+        restoreButton.enabled = true
     )
 )
 
@@ -334,25 +320,12 @@ on importButton pressed do (
 
 on restoreButton pressed do (
     local roomIndex = ObjectPlacer.roomDropdown.selection
-    format "roomIndex: %\n" roomIndex
-
     local roomIndexInList = findRoomIndex originalPositionList roomIndex
-    format "roomIndexInList: %\n" roomIndexInList
 
     if roomIndexInList > 0 do (
         local roomOriginalPositions = originalPositionList[roomIndexInList][2]
-        format "roomOriginalPositions: %\n" roomOriginalPositions
-        
-        print "Calling restoreOriginalPositions with:"
-        print roomOriginalPositions
         restoreOriginalPositions roomOriginalPositions
-
-        -- Error handling for restoreButton
-        if isKindOf restoreButton RolloutControl then (
-            restoreButton.enabled = false
-        ) else (
-            format "Error: restoreButton is not a valid RolloutControl.\n"
-        )
+        restoreButton.enabled = false
     )
 )
 
