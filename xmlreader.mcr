@@ -125,34 +125,50 @@ fn readXMLData xmlFile = (
     )
     objectDataList
 )
-fn updateSceneObjects xmlData roomIndex =
-(
-    for i = 1 to xmlData.count do
-    (
-        local objName = xmlData[i][1]
-        local objPosData = xmlData[i][2]
-        local objRotData = xmlData[i][3]
-        local sceneObj = getNodeByName objName
-
-        if sceneObj != undefined then
-        (
-            if sceneObj.isHidden == false then
-            (
-                local objPos = [((objPosData[1]) as float), ((objPosData[2]) as float), ((objPosData[3]) as float)]
-                local objRot = (eulerAngles ((objRotData[1]) as float) ((objRotData[2]) as float) ((objRotData[3]) as float))
-                sceneObj.pos = objPos
-                sceneObj.rotation = objRot
+fn updateSceneObjects objectDataList roomIndex = (
+    -- Получаем список индексов объектов для выбранной комнаты
+    local indexes = objectIndexes[roomIndex]
+    print "Список индексов объектов:"
+    print indexes
+    -- Перебираем все объекты в списке данных объектов и обновляем только те, которые есть в списке индексов
+    with redraw off (
+        for i = 1 to indexes.count do (
+            local objectIndex = indexes[i]
+            if objectIndex != undefined and objectIndex < objectDataList.count then (
+                local objectData = objectDataList[objectIndex+1] -- Индексы объектов в списке данных начинаются с 0
+                local objectName = objectData[1]
+                local obj = getNodeByName objectName
+                
+                -- Проверяем, что объект найден в сцене и является геометрией
+                if obj != undefined then (
+                    -- Проверяем, что объект видим и обновляем его позицию и поворот
+                    if obj.isHidden == false then (
+                        local newPosition = [objectData[2][1], objectData[2][2], objectData[2][3]]  
+                        local rotX = objectData[3][1]
+                        local rotY = objectData[3][2]
+                        local rotZ = objectData[3][3]
+                        local newRotation = eulerangles rotX rotY rotZ
+                        obj.rotation = newRotation
+                        obj.pos = newPosition
+                        print "Объект обновлен:"
+                        print objectName
+                        print "Новые координаты:"
+                        print newPosition
+                        format "Объект % обновлен на координаты: %\n" objectName obj.pos
+                    ) else (
+                        format "Объект % найден в сцене, но скрыт.\n" objectName
+                    )
+                ) else (
+                    format "Объект % не найден в сцене.\n" objectName.count
+                )
+            ) else (
+                format "Индекс объекта % вне диапазона.\n" objectIndex
             )
-            else
-            (
-                format "Object % is hidden in the scene.\n" objName
-            )
-        )
-        else
-        (
-            format "Object % not found in the scene.\n" objName
         )
     )
+    -- Выводим сообщение о завершении обновления объектов
+    messagebox "Объекты были обновлены в соответствии с данными из XML файла."
+    redrawViews()
 )
 
 fn setVisibilityByClass className isVisible =
@@ -180,28 +196,28 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:350 (
     button importButton "Расставить объекты" pos:[5,100] width:150 height:30
     button restoreButton "Восстановить позиции объектов" pos:[5,135] width:150 height:30 enabled:false
     button exportButton "Экспорт" pos:[5,170] width:150 height:30 enabled:false
-	button btnHide "Скрыть игровые коллизии" pos:[5,205] width:150 height:30
-	button btnShow "Показать игровые коллизии" pos:[5,240] width:150 height:30
-	button btn_RunScript "Create Portal" pos:[5,275] width:150 height:30
-	button btn_RunScript2 "Убрать GTAV объекты из экспорта" pos:[5,310] width:150 height:30
+    button btnHide "Скрыть игровые коллизии" pos:[5,205] width:150 height:30
+    button btnShow "Показать игровые коллизии" pos:[5,240] width:150 height:30
+    button btn_RunScript "Create Portal" pos:[5,275] width:150 height:30
+    button btn_RunScript2 "Убрать GTAV объекты из экспорта" pos:[5,310] width:150 height:30
     -- Словарь для хранения позиций объектов по комнатам
-	
+    
 
-	
-	on btn_RunScript pressed do (
+    
+    on btn_RunScript pressed do (
     -- Путь к скрипту customPortals.ms
-	local appdata_path = getDir #userScripts
-	local script_path = appdata_path + "\customPortals.ms"
+    local appdata_path = getDir #userScripts
+    local script_path = appdata_path + "\customPortals.ms"
 
     -- Запуск скрипта
     fileIn script_path
   )
 
-	
-	on btn_RunScript2 pressed do (
+    
+    on btn_RunScript2 pressed do (
     -- Путь к скрипту customPortals.ms
-	local appdata_path2 = getDir #userScripts
-	local script_path2 = appdata_path2 + "\forexport.ms"
+    local appdata_path2 = getDir #userScripts
+    local script_path2 = appdata_path2 + "\forexport.ms"
 
     -- Запуск скрипта
     fileIn script_path2
@@ -211,16 +227,16 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:350 (
     (
         setVisibilityByClass class1 false
         setVisibilityByClass class2 false
-		setVisibilityByClass class3 false
-		setVisibilityByClass class4 false
+        setVisibilityByClass class3 false
+        setVisibilityByClass class4 false
     )
 
     on btnShow pressed do
     (
         setVisibilityByClass class1 true
         setVisibilityByClass class2 true
-		setVisibilityByClass class3 true
-		setVisibilityByClass class4 true
+        setVisibilityByClass class3 true
+        setVisibilityByClass class4 true
     )
 
     on xmlButton pressed do (
@@ -230,8 +246,8 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:350 (
             ObjectPlacer.roomDropdown.items = roomData[1]
             objectIndexes = roomData[2]
             ObjectPlacer.roomDropdown.selection = 1
-			
-			global xmlData = readXMLData xmlFilePath
+            
+            global xmlData = readXMLData xmlFilePath
         )
     )
 
@@ -242,8 +258,8 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:350 (
             updateSceneObjects xmlFile roomIndex
         )
     )
-	local originalPositionList = #()
-	local objectsList = #()
+    local originalPositionList = #()
+    local objectsList = #()
 -- Инициализируем словарь для хранения оригинальных позиций объектов
 fn saveOriginalPositions xmlData roomIndex =
 (
@@ -251,15 +267,27 @@ fn saveOriginalPositions xmlData roomIndex =
     for i = 1 to xmlData.count do
     (
         local objName = xmlData[i][1]
+        local objPos = xmlData[i][2] as Point3
         local sceneObj = getNodeByName objName
-        if sceneObj != undefined do (
-            local objPos = sceneObj.pos
-			append roomOriginalPositions [objName, objPos as string]
+        if sceneObj != undefined then
+        (
+            sceneObj.position = objPos
+            append roomOriginalPositions sceneObj.position
         )
     )
-    
-    return #(roomIndex, roomOriginalPositions)
+
+    if roomIndex > 0 and roomIndex <= roomOriginalPositions.count then
+    (
+        local roomIndexInList = roomIndex - 1
+        roomOriginalPositions[roomIndex]
+    )
+    else
+    (
+        print "Ошибка: неверный индекс комнаты"
+        undefined
+    )
 )
+
 
 
 
@@ -271,10 +299,16 @@ fn restoreOriginalPositions originalPositionsList =
             local objName = originalPos[1]
             local objPos = originalPos[2]
             local sceneObj = getNodeByName objName
-            if sceneObj != undefined do sceneObj.pos = [objPos[1] as float, objPos[2] as float, objPos[3] as float]
+            if sceneObj != undefined do (
+                local objPosArray = execute ("#(" + objPos + ")")
+                sceneObj.pos = objPosArray[1]
+            )
         )
     )
 )
+
+
+
 
 
 
@@ -336,7 +370,6 @@ on restoreButton pressed do (
         )
     )
 )
-
 
 
 
