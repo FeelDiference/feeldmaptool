@@ -2,7 +2,7 @@
 Maptool for 3dsmax which give you some easy method to work with .ytyp and gims evo
 
 Installing:
-1. Place folder scripts into your ENU MAX folder in AppData
+1. Place scripts folder into your ENU MAX folder in AppData
 2. Drag and Drop mcr script into the your Max
 
 Now script can:
