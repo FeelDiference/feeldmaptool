@@ -7,8 +7,8 @@ extends:EmptyModifier
         parameters main rollout:params
         (
             -- Определение параметров модификатора
-            roomFrom type:#string ui:edtRoomFrom
-            roomTo type:#string ui:edtRoomTo
+            roomFrom type:#string ui:edtRoomFrom default:"1"
+            roomTo type:#string ui:edtRoomTo default:"0"
             chk1 type:#boolean ui:chk1
             chk2 type:#boolean ui:chk2
             chk3 type:#boolean ui:chk3
@@ -23,15 +23,18 @@ extends:EmptyModifier
             chk12 type:#boolean ui:chk12
             chk13 type:#boolean ui:chk13
             chk14 type:#boolean ui:chk14
+            vertexCorner type:#string ui:edtvertexCorner default:""
              
         )
     -- Создание пользовательского интерфейса
     rollout params "FFLDPortal Parameters"
     (
         -- Создание текстовых полей "Room From" и "Room To"
-        editText edtRoomFrom "Room From:" align:#left fieldWidth:100
-        editText edtRoomTo "Room To:" align:#left fieldWidth:100
-
+        editText edtRoomFrom "Room From:" align:#right fieldWidth:50
+        editText edtRoomTo "Room To:" align:#right fieldWidth:50
+        editText mirpri "Mirror Priority:" align:#right fieldWidth:50 
+        editText opac "Opacity:" align:#right fieldWidth:50 
+        editText audoccl "Audio Occlusion:" align:#right fieldWidth:50
         -- Создание текстового блока и чекбоксов
         label lblTotal "Total Value: 0" align:#left
         checkBox chk1 "1 - Disables exterior rendering" align:#left
@@ -46,9 +49,11 @@ extends:EmptyModifier
         checkBox chk10 "512 - Unk10" align:#left
         checkBox chk11 "1024 - Mirror limbo entities" align:#left
         checkBox chk12 "2048 - Unk12" align:#left
-        checkBox chk13 "4096 - Unk13" align:#left
+        checkBox chk13 "4096 - Unk13" align:#leftw
         checkBox chk14 "8192 - Disable farclipping" align:#left
-
+        label vertCorn "Corners" align:#center
+        editText edtvertexCorner align:#center height:80 width:160 readonly:true
+        
                -- Функция расчета итогового значения
         fn updateTotal =
         (
@@ -73,7 +78,7 @@ extends:EmptyModifier
         fn getSaveData = #(edtRoomFrom.text, edtRoomTo.text,
             chk1.state, chk2.state, chk3.state, chk4.state,
             chk5.state, chk6.state, chk7.state, chk8.state,
-            chk9.state, chk10.state, chk11.state, chk12.state, chk13.state, chk14.state, lblTotal.text)
+            chk9.state, chk10.state, chk11.state, chk12.state, chk13.state, chk14.state, lblTotal.text,edtvertexCorner.text)
         fn setSaveData arr = (
             edtRoomFrom.text = arr[1]
             edtRoomTo.text = arr[2]
@@ -92,6 +97,7 @@ extends:EmptyModifier
             chk13.state = arr[15]
             chk14.state = arr[16]
             lblTotal.text = arr[17]
+            edtvertexCorner.text = arr[18]
         )
         -- Привязка функции к событиям изменения состояния чекбоксов
         on chk1 changed state do updateTotal()
@@ -117,11 +123,15 @@ extends:EmptyModifier
         (
             roomTo = text
         )
-
+         on edtvertexCorner entered text do
+        (
+            vertexCorner = text
+        )
         on params open do
         (
             edtRoomFrom.text = roomFrom
             edtRoomTo.text = roomTo
+            edtvertexCorner.text = vertexCorner
             updateTotal()
         )
         
@@ -137,9 +147,3 @@ extends:EmptyModifier
     )
 
 )
-
-    on params close do
-    (
-        roomFromGlobal = edtRoomFrom.text
-        roomToGlobal = edtRoomTo.text
-    )
