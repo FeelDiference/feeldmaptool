@@ -1,31 +1,30 @@
-global roomFromGlobal = ""
-global roomToGlobal = ""
-
 plugin modifier FFLDPortal
 name:"FFLDPortal"
-classID:#(0x4d5125f5, 0x1e0f7a9e)
+classID:#(0x5a8397b1, 0x3c4b10f2)
 extends:EmptyModifier
-(
-    -- Создание параметров модификатора
-    parameters main rollout:params
     (
-        -- Определение параметров модификатора
-        chk1 type:#boolean ui:chk1
-        chk2 type:#boolean ui:chk2
-        chk3 type:#boolean ui:chk3
-        chk4 type:#boolean ui:chk4
-        chk5 type:#boolean ui:chk5
-        chk6 type:#boolean ui:chk6
-        chk7 type:#boolean ui:chk7
-        chk8 type:#boolean ui:chk8
-        chk9 type:#boolean ui:chk9
-        chk10 type:#boolean ui:chk10
-        chk11 type:#boolean ui:chk11
-        chk12 type:#boolean ui:chk12
-        chk13 type:#boolean ui:chk13
-        chk14 type:#boolean ui:chk14
-    )
-
+    -- Создание параметров модификатора
+        parameters main rollout:params
+        (
+            -- Определение параметров модификатора
+            roomFrom type:#string ui:edtRoomFrom
+            roomTo type:#string ui:edtRoomTo
+            chk1 type:#boolean ui:chk1
+            chk2 type:#boolean ui:chk2
+            chk3 type:#boolean ui:chk3
+            chk4 type:#boolean ui:chk4
+            chk5 type:#boolean ui:chk5
+            chk6 type:#boolean ui:chk6
+            chk7 type:#boolean ui:chk7
+            chk8 type:#boolean ui:chk8
+            chk9 type:#boolean ui:chk9
+            chk10 type:#boolean ui:chk10
+            chk11 type:#boolean ui:chk11
+            chk12 type:#boolean ui:chk12
+            chk13 type:#boolean ui:chk13
+            chk14 type:#boolean ui:chk14
+             
+        )
     -- Создание пользовательского интерфейса
     rollout params "FFLDPortal Parameters"
     (
@@ -49,8 +48,28 @@ extends:EmptyModifier
         checkBox chk12 "2048 - Unk12" align:#left
         checkBox chk13 "4096 - Unk13" align:#left
         checkBox chk14 "8192 - Disable farclipping" align:#left
-      
-      
+
+               -- Функция расчета итогового значения
+        fn updateTotal =
+        (
+            local total = 0
+
+            if chk1.state then total += 1
+            if chk2.state then total += 2
+            if chk3.state then total += 4
+            if chk4.state then total += 8
+            if chk5.state then total += 16
+            if chk6.state then total += 32
+            if chk7.state then total += 64
+            if chk8.state then total += 128
+            if chk9.state then total += 256
+            if chk10.state then total += 512
+            if chk11.state then total += 1024
+            if chk12.state then total += 2048
+            if chk13.state then total += 4096
+            if chk14.state then total += 8192
+            lblTotal.text = "Total Value: " + total as string
+        )
         fn getSaveData = #(edtRoomFrom.text, edtRoomTo.text,
             chk1.state, chk2.state, chk3.state, chk4.state,
             chk5.state, chk6.state, chk7.state, chk8.state,
@@ -74,28 +93,6 @@ extends:EmptyModifier
             chk14.state = arr[16]
             lblTotal.text = arr[17]
         )
-               -- Функция расчета итогового значения
-        fn updateTotal =
-        (
-            local total = 0
-
-            if chk1.state then total += 1
-            if chk2.state then total += 2
-            if chk3.state then total += 4
-            if chk4.state then total += 8
-            if chk5.state then total += 16
-            if chk6.state then total += 32
-            if chk7.state then total += 64
-            if chk8.state then total += 128
-            if chk9.state then total += 256
-            if chk10.state then total += 512
-            if chk11.state then total += 1024
-            if chk12.state then total += 2048
-            if chk13.state then total += 4096
-            if chk14.state then total += 8192
-            lblTotal.text = "Total Value: " + total as string
-        )
-
         -- Привязка функции к событиям изменения состояния чекбоксов
         on chk1 changed state do updateTotal()
         on chk2 changed state do updateTotal()
@@ -113,17 +110,18 @@ extends:EmptyModifier
         on chk14 changed state do updateTotal()
         on edtRoomFrom entered text do
         (
-            roomFromGlobal = text
+             roomFrom = text
         )
         
         on edtRoomTo entered text do
         (
-            roomToGlobal = text
+            roomTo = text
         )
+
         on params open do
         (
-            edtRoomFrom.text = roomFromGlobal
-            edtRoomTo.text = roomToGlobal
+            edtRoomFrom.text = roomFrom
+            edtRoomTo.text = roomTo
             updateTotal()
         )
         
@@ -131,12 +129,17 @@ extends:EmptyModifier
     
 
      -- Создание пользовательских атрибутов
-     on FFLDPortal open do replaceUI params
+    on FFLDPortal open do
+    (
+        replaceUI params
+        -- Добавление кастомных атрибутов к модификатору
+        custAttributes.add this FFLDPortalAttributes
+    )
+
+)
 
     on params close do
     (
         roomFromGlobal = edtRoomFrom.text
         roomToGlobal = edtRoomTo.text
     )
-)
-
