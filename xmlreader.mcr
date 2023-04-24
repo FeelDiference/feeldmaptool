@@ -180,7 +180,7 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:350 (
     on btn_RunScript pressed do (
     -- Путь к скрипту customPortals.ms
     local appdata_path = getDir #userScripts
-    local script_path = appdata_path + "\customPortals.ms"
+    local script_path = appdata_path + "\crtlportal.ms"
 
     -- Запуск скрипта
     fileIn script_path
