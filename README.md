@@ -12,4 +12,4 @@ Opportunities:
 3. Place all object in MLO room, on them coordinates. (Recognize your MLO room and work directly from choosen)
 4. Delete non custom object from export in GIMS.
 5. Create virtual portals in your scene.
-
+6. Separate props by layer(simple example: in room_1 we have 2 sofas, button create layer with name room_1 and place only this object to the layer)
