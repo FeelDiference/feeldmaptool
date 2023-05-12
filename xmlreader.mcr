@@ -103,51 +103,110 @@ fn readXMLData xmlFile = (
     )
     objectDataList
 )
+fn checkDuplicates xmlData =
+(
+    local duplicates = #()
+    local tempNames = #()
+    for i = 1 to xmlData.count do
+    (
+        local objName = xmlData[i][1]
+        if findItem tempNames objName != 0 then
+        (
+            append duplicates i
+        )
+        else
+        (
+            append tempNames objName
+        )
+    )
+    duplicates
+)
+
+fn findObjectByNamePrefix objectName = (
+    local i = 1
+    local newName = if i == 1 then format "%s001" objectName else (format "%s%03i" (substring objectName 1 (strlen objectName - 3)) i)
+    local obj = getNodeByName newName
+
+    while obj != undefined do (
+        i += 1
+        newName = format "%s_%03i" objectName i
+        obj = getNodeByName newName
+    )
+    return newName
+)
+fn copyHierarchy srcObj = (
+    local copiedObj = copy srcObj
+    for child in srcObj.children do (
+        local copiedChild = copyHierarchy child
+        copiedChild.parent = copiedObj
+    )
+    copiedObj
+)
+
 fn updateSceneObjects objectDataList roomIndex = (
-    -- Получаем список индексов объектов для выбранной комнаты
+    local duplicates = checkDuplicates objectDataList
     local indexes = objectIndexes[roomIndex]
-    -- Перебираем все объекты в списке данных объектов и обновляем только те, которые есть в списке индексов
+
     with redraw off (
         for i = 1 to indexes.count do (
             local objectIndex = indexes[i]
+
             if objectIndex != undefined and objectIndex < objectDataList.count then (
-                local objectData = objectDataList[objectIndex+1] -- Индексы объектов в списке данных начинаются с 0
+                local objectData = objectDataList[objectIndex+1]
                 local objectName = objectData[1]
                 local obj = getNodeByName objectName
                 
-                -- Проверяем, что объект найден в сцене и является геометрией
                 if obj != undefined then (
-                    -- Проверяем, что объект видим и обновляем его позицию и поворот
                     if obj.isHidden == false then (
-                        local newPosition = [objectData[2][1], objectData[2][2], objectData[2][3]]  
+                        local newPosition = [objectData[2][1], objectData[2][2], objectData[2][3]]
                         local rotX = objectData[3][1]
                         local rotY = objectData[3][2]
                         local rotZ = objectData[3][3]
                         local newRotation = eulerangles rotX rotY rotZ
-                        obj.rotation = newRotation
-                        obj.pos = newPosition
-                        print "Объект обновлен:"
-                        print objectName
-                        print "Новые координаты:"
-                        print newPosition
-                    ) else (
-                        format ""
+
+                        if findItem duplicates (objectIndex+1) != 0 then (
+                            local copiedObjName = objectName + "_" + (objectIndex as string)
+                            if not isValidNode (getNodeByName copiedObjName) then (
+                                local copiedObj = copyHierarchy obj
+                                copiedObj.name = copiedObjName
+                                copiedObj.pos = newPosition
+                                copiedObj.rotation = newRotation
+                                format "Объект % скопирован со всеми дочерними элементами и размещен на позиции % и повернут с углами Euler: %\n" copiedObjName newPosition newRotation
+                            ) else (
+                                format "Объект с именем % уже существует в сцене\n" copiedObjName
+                            )
+                        )
+                        else (
+                            obj.rotation = newRotation
+                            obj.pos = newPosition
+                            format "Объект % размещен на позиции % и повернут с углами Euler: %\n" objectName newPosition newRotation
+                        )
                     )
                 ) else (
-                    format "" 
+                    format "Объект % не найден в сцене\n" objectName
                 )
             ) else (
-                format "" 
+                format "Индекс объекта % находится вне диапазона списка данных объектов\n" objectIndex
             )
         )
     )
-    -- Выводим сообщение о завершении обновления объектов
+
     messagebox "Объекты были обновлены в соответствии с данными из XML файла."
-    redrawViews()
 )
+
+
+
+
+
+class1 = EGIMS_V_Col_Composite
+class2 = EGIMS_V_CollisionMesh
+class3 = EGIMS_V_Col_Box
+class4 = EGIMS_V_Col_Cylinder
 
 fn setVisibilityByClass className isVisible =
 (
+
+
     allObjects = objects as array
 
     for obj in allObjects do
@@ -159,15 +218,12 @@ fn setVisibilityByClass className isVisible =
     )
 )
 
--- Определение классов
-class1 = EGIMS_V_Col_Composite
-class2 = EGIMS_V_CollisionMesh
-class3 = EGIMS_V_Col_Box
-class4 = EGIMS_V_Col_Cylinder
+
 fn startsWith s prefix =
 (
     (findString s prefix) == 1
 )
+-- Определение классов
 
 global moveObjectsToLayer
 fn moveObjectsToLayer objects roomName =
@@ -202,6 +258,7 @@ fn moveObjectsToLayer objects roomName =
     )
 )
 
+
 rollout ObjectPlacer "FeelD MapTools" width:162 height:385 (
     button xmlButton "Выберите файл XML" pos:[10, 5] width:135 height:30
     dropdownList roomDropdown "Выберите комнату:" pos:[10, 40] width:135 height:20 items:#()
@@ -214,6 +271,7 @@ rollout ObjectPlacer "FeelD MapTools" width:162 height:385 (
     button btn_RunScript "Create Portal" pos:[5,310] width:150 height:30
     button btn_RunScript2 "Убрать GTAV объекты из экспорта" pos:[5,345] width:150 height:30
     
+
 
     -- Словарь для хранения позиций объектов по комнатам
     
@@ -390,6 +448,7 @@ on exportButton pressed do (
 )
 
 )
+
 createDialog ObjectPlacer
 
 
